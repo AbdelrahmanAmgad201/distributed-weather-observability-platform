@@ -18,6 +18,7 @@ COPY --from=build /app/target/weather-station-mock-1.0-SNAPSHOT-jar-with-depende
 ENV KAFKA_BROKER="localhost:9092"
 ENV TOPIC_NAME="weather-stations"
 ENV STATION_ID="1"
+ENV MODE="random"
 
 # Run the application
 CMD ["java", "-jar", "app.jar"]
