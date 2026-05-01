@@ -1,12 +1,11 @@
 package logic;
 
-import java.util.ArrayList;
-import java.util.List;
 
 public class WeatherStationApp {
     public static void main(String[] args){
         String bootstrap = System.getenv().getOrDefault("KAFKA_BROKER", "localhost:9092");
         String topic = System.getenv().getOrDefault("TOPIC_NAME", "weather-stations");
+        String mode = System.getenv().getOrDefault("MODE", "random"); // "random" or "open-meteo"
         String stationIdStr = System.getenv().getOrDefault("STATION_ID", "1");
 
         long stationId = 1L;
@@ -18,15 +17,30 @@ public class WeatherStationApp {
 
         KafkaWeatherProducer producer = new KafkaWeatherProducer(bootstrap, topic);
 
-        WeatherGenerator g = new WeatherGenerator(stationId, producer);
-        g.start(0L);
-        System.out.println("Started generator for station " + stationId + " targeting topic " + topic);
+        if ("open-meteo".equalsIgnoreCase(mode)) {
+            // Run Open-Meteo Adapter Mode
+            OpenMeteoAdapter adapter = new OpenMeteoAdapter(stationId, producer);
+            adapter.start();
+            System.out.println("Pipeline running in OPEN-METEO mode. Adapter station (" + stationId + ") active.");
 
-        // keep main thread alive
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Shutting down generator...");
-            g.stop();
-        }));
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                System.out.println("Shutting down Open-Meteo adapter...");
+                adapter.stop();
+                producer.close();
+            }));
+
+        } else {
+            // Run Random Simulated Generator Mode (Default)
+            WeatherGenerator simulated = new WeatherGenerator(stationId, producer);
+            simulated.start(0L);
+            System.out.println("Pipeline running in RANDOM mode. Simulated station (" + stationId + ") active.");
+
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                System.out.println("Shutting down simulated generator...");
+                simulated.stop();
+                producer.close();
+            }));
+        }
 
         try {
             Thread.currentThread().join();
