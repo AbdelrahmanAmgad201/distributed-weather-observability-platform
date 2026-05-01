@@ -125,7 +125,7 @@ services:
   weather-station-11:
     build: ./weather-station-mock
     environment:
-      - MODE=opem-meteo
+      - MODE=open-meteo
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather-stations
       - STATION_ID=11
