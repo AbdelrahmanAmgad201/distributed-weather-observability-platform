@@ -16,6 +16,13 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    healthcheck:
+      # Wait until the broker is actually accepting connections before letting dependents start
+      test: ["CMD", "kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 15s
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -24,6 +31,9 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    depends_on:
+      kafka:
+        condition: service_healthy
 
   weather-station-1:
     build: ./weather-station-mock
@@ -32,7 +42,8 @@ services:
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=1
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
   weather-station-2:
     build: ./weather-station-mock
@@ -41,7 +52,8 @@ services:
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=2
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
   weather-station-3:
     build: ./weather-station-mock
@@ -50,7 +62,8 @@ services:
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=3
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
   weather-station-4:
     build: ./weather-station-mock
@@ -59,7 +72,8 @@ services:
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=4
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
   weather-station-5:
     build: ./weather-station-mock
@@ -68,7 +82,8 @@ services:
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=5
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
   weather-station-6:
     build: ./weather-station-mock
@@ -77,7 +92,8 @@ services:
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=6
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
   weather-station-7:
     build: ./weather-station-mock
@@ -86,7 +102,8 @@ services:
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=7
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
   weather-station-8:
     build: ./weather-station-mock
@@ -95,7 +112,8 @@ services:
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=8
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
   weather-station-9:
     build: ./weather-station-mock
@@ -104,7 +122,8 @@ services:
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=9
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
   weather-station-10:
     build: ./weather-station-mock
@@ -113,7 +132,8 @@ services:
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=10
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
 
   central-station:
     build: ./central-station
@@ -121,5 +141,14 @@ services:
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - APP_TOPIC_INPUT=weather.telemetry.v1
       - APP_TOPIC_ALERTS=weather.alerts.rain.v1
+      - BITCASK_DATA_PATH=/data/bitcask
+    volumes:
+      - bitcask_data:/data/bitcask
+      - parquet_data:/data/parquet
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
+
+volumes:
+  bitcask_data:
+  parquet_data:

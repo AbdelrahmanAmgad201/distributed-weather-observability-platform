@@ -1,32 +1,47 @@
 package org.example.centralstation.bitcask;
 
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Service
+/**
+ * In-memory index: maps stationId (String) → RecordPointer (where on disk the latest value lives).
+ *
+ * Uses ConcurrentHashMap so reads are always lock-free.
+ * Writes happen under the SegmentManager's writeLock, which guarantees
+ * that the file write completes before the KeyDir entry is updated.
+ */
+@Component
 public class KeyDir {
 
-    private final Map<String, RecordPointer> keys = new ConcurrentHashMap<>();
+    private final Map<String, RecordPointer> index = new ConcurrentHashMap<>();
 
-    public KeyDir() {
-        // HINT: This constructor runs when the Spring Boot app starts.
-        // Step 1: Scan the storage directory for all `.hint` files.
-        // Step 2: Read them sequentially and populate the 'keys' map.
-        // Step 3: Find the active `.data` file (which has no hint file yet).
-        // Step 4: Scan the active `.data` file to load the most recent keys into memory.
+    /** Update the pointer for a key. Called after a successful file append. */
+    public void put(String key, RecordPointer pointer) {
+        index.put(key, pointer);
     }
 
-    public void put(String stationId, RecordPointer pointer) {
-        keys.put(stationId, pointer);
+    /**
+     * Replace a key's pointer only if it still points to the expected old segment.
+     * Used during compaction to avoid overwriting a newer write that arrived mid-compaction.
+     */
+    public boolean replaceIfSameFile(String key, String expectedFileId, RecordPointer newPointer) {
+        RecordPointer current = index.get(key);
+        if (current != null && current.fileId().equals(expectedFileId)) {
+            index.put(key, newPointer);
+            return true;
+        }
+        return false;
     }
 
-    public RecordPointer get(String stationId) {
-        return keys.get(stationId);
+    /** Returns null if the key has never been written. */
+    public RecordPointer get(String key) {
+        return index.get(key);
     }
 
+    /** Returns a snapshot of all current key→pointer mappings. */
     public Map<String, RecordPointer> getAllPointers() {
-        return Map.copyOf(keys);
+        return Map.copyOf(index);
     }
 }
