@@ -37,14 +37,14 @@ public class RainDetectionProcessor {
         // 3. The DSL Pipeline
         weatherStream
                 // KEEP only records where humidity > 70%
-                .filter((key, status) -> status != null && status.weather() != null && status.weather().humidity() != null && status.weather().humidity() > 70)
+                .filter((key, status) -> status != null && status.getWeather() != null && status.getWeather().getHumidity() != null && status.getWeather().getHumidity() > 70)
 
                 // TRANSFORM the matched record into a "special message" string
                 .mapValues(status -> String.format(
                         "RAIN ALERT: Station %d reporting %d%% humidity at timestamp %d",
-                        status.stationId(),
-                        status.weather().humidity(),
-                        status.statusTimestamp()
+                        status.getStationId(),
+                        status.getWeather().getHumidity(),
+                        status.getStatusTimestamp()
                 ))
 
                 // PUSH the special message to the target alert topic

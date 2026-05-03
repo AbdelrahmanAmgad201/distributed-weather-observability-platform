@@ -43,7 +43,7 @@ public class BitcaskEngine {
      * Thread-safe: SegmentManager holds the write lock internally.
      */
     public void put(WeatherStatus status) throws IOException {
-        String key = String.valueOf(status.stationId());
+        String key = String.valueOf(status.getStationId());
         byte[] value = serializer.serialize(status);
 
         // 1. Append to file  →  2. Update KeyDir (order matters for correctness)
