@@ -28,7 +28,8 @@ public class WeatherGenerator {
 	}
 
 	public void start(long initialDelayMs) {
-		executor.scheduleAtFixedRate(this::produceOnce, initialDelayMs, 1000, TimeUnit.MILLISECONDS);
+		executor.scheduleAtFixedRate(this::produceOnce, initialDelayMs, 100, TimeUnit.MILLISECONDS);
+		// executor.scheduleAtFixedRate(this::produceOnce, initialDelayMs, 1000, TimeUnit.MILLISECONDS);
 		Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
 	}
 
