@@ -37,6 +37,7 @@ services:
   weather-station-1:
     build: ./weather-station-mock
     environment:
+      - MODE=random
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=1
@@ -47,6 +48,7 @@ services:
   weather-station-2:
     build: ./weather-station-mock
     environment:
+      - MODE=random
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=2
@@ -57,6 +59,7 @@ services:
   weather-station-3:
     build: ./weather-station-mock
     environment:
+      - MODE=random
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=3
@@ -67,6 +70,7 @@ services:
   weather-station-4:
     build: ./weather-station-mock
     environment:
+      - MODE=random
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=4
@@ -77,6 +81,7 @@ services:
   weather-station-5:
     build: ./weather-station-mock
     environment:
+      - MODE=random
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=5
@@ -87,6 +92,7 @@ services:
   weather-station-6:
     build: ./weather-station-mock
     environment:
+      - MODE=random
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=6
@@ -97,6 +103,7 @@ services:
   weather-station-7:
     build: ./weather-station-mock
     environment:
+      - MODE=random
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=7
@@ -107,6 +114,7 @@ services:
   weather-station-8:
     build: ./weather-station-mock
     environment:
+      - MODE=random
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=8
@@ -117,6 +125,7 @@ services:
   weather-station-9:
     build: ./weather-station-mock
     environment:
+      - MODE=random
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=9
@@ -127,9 +136,21 @@ services:
   weather-station-10:
     build: ./weather-station-mock
     environment:
+      - MODE=random
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=10
+    # depends_on:
+    #   kafka:
+    #     condition: service_healthy
+    
+    weather-station-11:
+    build: ./weather-station-mock
+    environment:
+      - MODE=open-meteo
+      - KAFKA_BROKER=kafka:29092
+      - TOPIC_NAME=weather.telemetry.v1
+      - STATION_ID=11
     # depends_on:
     #   kafka:
     #     condition: service_healthy
