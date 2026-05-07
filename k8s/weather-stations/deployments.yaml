@@ -1,0 +1,397 @@
+# Weather stations 1-10: random/synthetic data mode.
+#
+# Each station is a separate 1-replica Deployment so it gets its own unique
+# STATION_ID environment variable without any code changes.
+# Shared config (KAFKA_BROKER, TOPIC_NAME, MODE) comes from the ConfigMap.
+#
+# If you want to add or remove stations, duplicate or delete a block below.
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-station-1
+  namespace: weather
+  labels:
+    app: weather-station
+    station-id: "1"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather-station
+      station-id: "1"
+  template:
+    metadata:
+      labels:
+        app: weather-station
+        station-id: "1"
+    spec:
+      containers:
+        - name: weather-station
+          image: weather-station-mock:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: weather-station-mock-config
+          env:
+            - name: STATION_ID
+              value: "1"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-station-2
+  namespace: weather
+  labels:
+    app: weather-station
+    station-id: "2"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather-station
+      station-id: "2"
+  template:
+    metadata:
+      labels:
+        app: weather-station
+        station-id: "2"
+    spec:
+      containers:
+        - name: weather-station
+          image: weather-station-mock:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: weather-station-mock-config
+          env:
+            - name: STATION_ID
+              value: "2"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-station-3
+  namespace: weather
+  labels:
+    app: weather-station
+    station-id: "3"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather-station
+      station-id: "3"
+  template:
+    metadata:
+      labels:
+        app: weather-station
+        station-id: "3"
+    spec:
+      containers:
+        - name: weather-station
+          image: weather-station-mock:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: weather-station-mock-config
+          env:
+            - name: STATION_ID
+              value: "3"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-station-4
+  namespace: weather
+  labels:
+    app: weather-station
+    station-id: "4"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather-station
+      station-id: "4"
+  template:
+    metadata:
+      labels:
+        app: weather-station
+        station-id: "4"
+    spec:
+      containers:
+        - name: weather-station
+          image: weather-station-mock:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: weather-station-mock-config
+          env:
+            - name: STATION_ID
+              value: "4"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-station-5
+  namespace: weather
+  labels:
+    app: weather-station
+    station-id: "5"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather-station
+      station-id: "5"
+  template:
+    metadata:
+      labels:
+        app: weather-station
+        station-id: "5"
+    spec:
+      containers:
+        - name: weather-station
+          image: weather-station-mock:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: weather-station-mock-config
+          env:
+            - name: STATION_ID
+              value: "5"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-station-6
+  namespace: weather
+  labels:
+    app: weather-station
+    station-id: "6"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather-station
+      station-id: "6"
+  template:
+    metadata:
+      labels:
+        app: weather-station
+        station-id: "6"
+    spec:
+      containers:
+        - name: weather-station
+          image: weather-station-mock:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: weather-station-mock-config
+          env:
+            - name: STATION_ID
+              value: "6"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-station-7
+  namespace: weather
+  labels:
+    app: weather-station
+    station-id: "7"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather-station
+      station-id: "7"
+  template:
+    metadata:
+      labels:
+        app: weather-station
+        station-id: "7"
+    spec:
+      containers:
+        - name: weather-station
+          image: weather-station-mock:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: weather-station-mock-config
+          env:
+            - name: STATION_ID
+              value: "7"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-station-8
+  namespace: weather
+  labels:
+    app: weather-station
+    station-id: "8"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather-station
+      station-id: "8"
+  template:
+    metadata:
+      labels:
+        app: weather-station
+        station-id: "8"
+    spec:
+      containers:
+        - name: weather-station
+          image: weather-station-mock:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: weather-station-mock-config
+          env:
+            - name: STATION_ID
+              value: "8"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-station-9
+  namespace: weather
+  labels:
+    app: weather-station
+    station-id: "9"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather-station
+      station-id: "9"
+  template:
+    metadata:
+      labels:
+        app: weather-station
+        station-id: "9"
+    spec:
+      containers:
+        - name: weather-station
+          image: weather-station-mock:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: weather-station-mock-config
+          env:
+            - name: STATION_ID
+              value: "9"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-station-10
+  namespace: weather
+  labels:
+    app: weather-station
+    station-id: "10"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weather-station
+      station-id: "10"
+  template:
+    metadata:
+      labels:
+        app: weather-station
+        station-id: "10"
+    spec:
+      containers:
+        - name: weather-station
+          image: weather-station-mock:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: weather-station-mock-config
+          env:
+            - name: STATION_ID
+              value: "10"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
