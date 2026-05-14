@@ -1,6 +1,5 @@
 package org.example.centralstation.bitcask;
 
-import org.example.centralstation.model.WeatherStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;

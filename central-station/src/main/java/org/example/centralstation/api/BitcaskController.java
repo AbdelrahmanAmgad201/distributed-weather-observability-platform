@@ -39,11 +39,9 @@ public class BitcaskController {
         try {
             List<WeatherStatus> allStatuses = bitcaskEngine.getAll();
             StringBuilder csv = new StringBuilder();
-            csv.append("key,value\n"); // CSV Header
+            csv.append("key,value\n");
 
             for (WeatherStatus status : allStatuses) {
-                // Assuming status has a toString() or similar that you want as the value.
-                // Jackson could also be used here to stringify the JSON value inside the CSV.
                 String key = String.valueOf(status.getStationId());
                 String value = status.toString().replace("\"", "\"\""); // Basic escaping
                 csv.append(key).append(",\"").append(value).append("\"\n");

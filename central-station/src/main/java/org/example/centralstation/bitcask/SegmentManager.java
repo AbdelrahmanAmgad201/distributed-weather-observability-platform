@@ -33,7 +33,7 @@ public class SegmentManager {
 
     private static final Logger log = LoggerFactory.getLogger(SegmentManager.class);
 
-    private static final long MAX_SEGMENT_SIZE = 4L * 1024 * 1024; // 8 MB
+    private static final long MAX_SEGMENT_SIZE = 4L * 1024 * 1024; // 4 MB
     private static final String DATA_EXT = ".data";
     private static final String HINT_EXT = ".hint";
 

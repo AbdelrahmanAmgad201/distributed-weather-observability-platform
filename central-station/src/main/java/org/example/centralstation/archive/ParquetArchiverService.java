@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -28,74 +29,73 @@ import java.util.stream.Collectors;
 public class ParquetArchiverService {
 
     private static final Logger log = LoggerFactory.getLogger(ParquetArchiverService.class);
-    private static final int BATCH_SIZE = 1000;
-    // private static final int BATCH_SIZE = 10000;
+    private static final int BATCH_SIZE = 10000;
 
     @org.springframework.beans.factory.annotation.Value("${parquet.data-path:archive}")
     private String baseArchiveDir;
 
-    /** Thread-safe in-memory buffer. Multiple Kafka consumer threads can enqueue concurrently. */
     private final BlockingQueue<WeatherStatus> queue = new LinkedBlockingQueue<>();
 
-    /** Guard against concurrent scheduled invocations (e.g. if flush takes > interval). */
     private final AtomicBoolean flushing = new AtomicBoolean(false);
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
             .withZone(ZoneId.systemDefault());
 
-    /**
-     * Called by the Kafka consumer for every incoming message.
-     * Simply enqueues the record — never triggers a flush directly
-     * to avoid blocking the consumer thread.
-     */
     public void enqueueForArchiving(WeatherStatus status) {
         queue.offer(status);
+        if (queue.size() >= BATCH_SIZE && !flushing.get()) {
+            CompletableFuture.runAsync(() -> flush(false));
+        }
     }
 
-    /**
-     * Scheduled flush: drains the queue in BATCH_SIZE chunks and writes each
-     * chunk to Parquet.  Runs every {@code archiver.flush.interval-ms} (default 60 s).
-     * Skips if a previous flush is still running.
-     */
     @Scheduled(fixedDelayString = "${archiver.flush.interval-ms:60000}")
-    public void flush() {
+    public void scheduledFlush() {
+        log.info("Starting scheduled flush of all records...");
+        flush(true);
+    }
+
+    public void flush(boolean forceAll) {
         if (!flushing.compareAndSet(false, true)) {
-            log.warn("Previous flush still running — skipping this tick.");
             return;
         }
         try {
-            drainAndWrite();
+            drainAndWrite(forceAll);
         } finally {
             flushing.set(false);
         }
     }
 
-    /**
-     * Drains the entire queue in BATCH_SIZE chunks, writing each chunk to Parquet.
-     * This ensures that if more than BATCH_SIZE records have accumulated between
-     * two scheduled ticks, they are all written in one invocation.
-     */
-    private void drainAndWrite() {
-        int totalWritten = 0;
-        while (!queue.isEmpty()) {
-            List<WeatherStatus> batch = new ArrayList<>(BATCH_SIZE);
-            queue.drainTo(batch, BATCH_SIZE);
-            if (batch.isEmpty()) break;
+    private void drainAndWrite(boolean forceAll) {
+        List<WeatherStatus> toWrite = new ArrayList<>();
 
+        if (forceAll) {
+            queue.drainTo(toWrite);
+        } else {
+            while (queue.size() >= BATCH_SIZE) {
+                List<WeatherStatus> batch = new ArrayList<>(BATCH_SIZE);
+                queue.drainTo(batch, BATCH_SIZE);
+                toWrite.addAll(batch);
+            }
+        }
+
+        if (toWrite.isEmpty()) return;
+
+        int totalWritten = 0;
+        for (int i = 0; i < toWrite.size(); i += BATCH_SIZE) {
+            List<WeatherStatus> batch = toWrite.subList(i, Math.min(i + BATCH_SIZE, toWrite.size()));
+            
             log.info("Archiving batch of {} records", batch.size());
 
-            // Partition by date and station_id for Hive-compatible directory layout
             Map<String, Map<String, List<WeatherStatus>>> partitioned = batch.stream()
                     .collect(Collectors.groupingBy(
                             this::getDatePartition,
-                            Collectors.groupingBy(s -> String.valueOf(s.getStationId()))
-                    ));
+                            Collectors.groupingBy(s -> String.valueOf(s.getStationId()))));
 
             try {
                 writePartitionsToParquet(partitioned);
                 totalWritten += batch.size();
             } catch (IOException e) {
-                log.error("Failed to write parquet batch of {} records — records dropped", batch.size(), e);
+                log.error("Failed to write parquet batch of {} records", batch.size(), e);
             }
         }
         if (totalWritten > 0) {
@@ -115,17 +115,18 @@ public class ParquetArchiverService {
                 String stationPart = stationEntry.getKey();
                 List<WeatherStatus> records = stationEntry.getValue();
 
-                // Hive-style partitioned path: archive/date=2026-05-03/station_id=1/<timestamp>.parquet
                 String pathString = String.format("%s/date=%s/station_id=%s/%d.parquet",
                         baseArchiveDir, datePart, stationPart, timestamp);
 
                 Path filePath = new Path(pathString);
 
-                // GZIP: pure-Java, no native libraries needed — reliable on any JVM/OS
+                Configuration conf = new Configuration();
+                conf.set("fs.file.impl", "org.apache.hadoop.fs.LocalFileSystem");
+
                 try (ParquetWriter<WeatherStatus> writer = AvroParquetWriter.<WeatherStatus>builder(filePath)
                         .withSchema(ReflectData.AllowNull.get().getSchema(WeatherStatus.class))
                         .withDataModel(ReflectData.get())
-                        .withConf(new Configuration())
+                        .withConf(conf)
                         .withCompressionCodec(CompressionCodecName.GZIP)
                         .withWriteMode(org.apache.parquet.hadoop.ParquetFileWriter.Mode.OVERWRITE)
                         .build()) {
@@ -141,6 +142,6 @@ public class ParquetArchiverService {
     }
 
     private String getDatePartition(WeatherStatus status) {
-        return dateFormatter.format(Instant.ofEpochMilli(status.getStatusTimestamp()));
+        return dateFormatter.format(Instant.ofEpochSecond(status.getStatusTimestamp()));
     }
 }
