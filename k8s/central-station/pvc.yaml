@@ -1,0 +1,13 @@
+# Bitcask-only PVC for the central-station.
+# Parquet files are stored on the shared parquet-pvc instead.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bitcask-pvc
+  namespace: weather
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

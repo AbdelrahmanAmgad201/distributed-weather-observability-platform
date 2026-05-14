@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: central-station
+  namespace: weather
+  labels:
+    app: central-station
+spec:
+  # NodePort: exposes the central-station HTTP API outside the cluster.
+  # Access it from your machine with:
+  #   minikube service central-station -n weather --url
+  type: NodePort
+  selector:
+    app: central-station
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      # nodePort is left unspecified so Kubernetes assigns one automatically
+      # (range 30000-32767). Use `minikube service` to get the exact URL.

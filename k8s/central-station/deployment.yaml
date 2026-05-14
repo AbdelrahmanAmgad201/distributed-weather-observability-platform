@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: central-station
+  namespace: weather
+  labels:
+    app: central-station
+spec:
+  # Keep at 1 replica: Bitcask is a single-writer store and Parquet files
+  # are written sequentially. Multiple replicas would cause write conflicts.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: central-station
+  template:
+    metadata:
+      labels:
+        app: central-station
+    spec:
+      containers:
+        - name: central-station
+          image: central-station:latest
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: central-station-config
+          volumeMounts:
+            - name: bitcask-data
+              mountPath: /data/bitcask
+            - name: parquet-data
+              mountPath: /data/parquet
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+      volumes:
+        - name: bitcask-data
+          persistentVolumeClaim:
+            claimName: bitcask-pvc
+        - name: parquet-data
+          persistentVolumeClaim:
+            claimName: parquet-pvc
