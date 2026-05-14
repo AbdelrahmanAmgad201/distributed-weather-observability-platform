@@ -4,8 +4,6 @@ metadata:
   name: weather-station-api-config
   namespace: weather
 data:
-  # This station fetches real weather data from the Open-Meteo API.
-  # It requires outbound internet access from the cluster (works on Minikube).
   KAFKA_BROKER: "kafka.weather.svc.cluster.local:9092"
   TOPIC_NAME: "weather.telemetry.v1"
   MODE: "open-meteo"

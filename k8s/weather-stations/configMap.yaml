@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: weather-station-config
-  namespace: weather
-data:
-  KAFKA_BROKER: "kafka.weather.svc.cluster.local:9092"
-  TOPIC_NAME:   "weather.telemetry.v1"
-  MODE:         "random"

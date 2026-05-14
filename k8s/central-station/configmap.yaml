@@ -7,6 +7,6 @@ data:
   SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka.weather.svc.cluster.local:9092"
   APP_TOPIC_INPUT: "weather.telemetry.v1"
   APP_TOPIC_ALERTS: "weather.alerts.rain.v1"
-  # Paths inside the container — backed by the PVC mounted at /data
   BITCASK_DATA_PATH: "/data/bitcask"
   PARQUET_DATA_PATH: "/data/parquet"
+  ARCHIVER_FLUSH_INTERVAL_MS: "30000"

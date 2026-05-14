@@ -45,8 +45,9 @@ A complete reference for operating the distributed weather observability platfor
 │  └───────────────────────┼─────────────────────────────┘                                              │
 │                          │ PersistentVolumeClaim (5Gi)                                               │
 │                                                                                                       │
-│  ┌──────────────────── Debug Tools ───────────────────┐                                              │
+│  ┌──────────────────── Debug & Analytics ────────────┐                                              │
 │  │  kafka-ui  (Provectus)  — browse topics, messages  │                                              │
+│  │  elasticsearch & kibana — search and dashboards    │                                              │
 │  └─────────────────────────────────────────────────────┘                                              │
 │                                                                                                       │
 └──────────────────────────┬────────────────────────────┬───────────────────────────────────────────────┘
@@ -60,9 +61,12 @@ A complete reference for operating the distributed weather observability platfor
 | Component | Kind | Replicas | Image | Purpose |
 |---|---|---|---|---|
 | `kafka` | Deployment | 1 | `apache/kafka:latest` | Message broker (KRaft, no ZooKeeper) |
-| `weather-station-1..10` | Deployment × 10 | 1 each | `weather-station-mock:latest` | Synthetic random data producers |
-| `weather-station-11` | Deployment | 1 | `weather-station-mock:latest` | Real data from Open-Meteo API |
+| `weather-station-1..5` | Deployment × 5 | 1 each | `weather-station-mock:latest` | Synthetic random data producers |
+| `weather-station-6..10` | Deployment × 5 | 1 each | `weather-station-mock:latest` | Real data from Open-Meteo API |
 | `central-station` | Deployment | 1 | `central-station:latest` | Kafka consumer + data storage |
+| `parquet-es-bridge` | Deployment | 1 | `parquet-es-bridge:latest` | Syncs Parquet to Elasticsearch |
+| `elasticsearch` | Deployment | 1 | `elasticsearch:9.4.0` | Analytics data store |
+| `kibana` | Deployment | 1 | `kibana:9.4.0` | Analytics UI |
 | `kafka-ui` | Deployment | 1 | `provectuslabs/kafka-ui:latest` | Web UI to browse Kafka |
 
 ### Services
@@ -93,17 +97,22 @@ k8s/
 │
 ├── weather-stations/
 │   ├── configmap.yaml           # Shared: KAFKA_BROKER, TOPIC_NAME, MODE=random
-│   └── deployments.yaml         # Stations 1–10 (10 Deployments, unique STATION_ID each)
+│   └── deployments.yaml         # Stations 1–5 (random mode)
 │
 ├── weather-stations-api/
 │   ├── configmap.yaml           # MODE=open-meteo config
-│   └── deployment.yaml          # Station 11
+│   └── deployments.yaml         # Stations 6–10 (Open-Meteo API mode)
 │
 └── central-station/
     ├── configmap.yaml           # Kafka + data path config
     ├── deployment.yaml          # Spring Boot consumer pod
     ├── service.yaml             # NodePort — your entry point
-    └── pvc.yaml                 # 5Gi volume for Bitcask + Parquet data
+    └── pvc.yaml                 # 2Gi volume for Bitcask
+    
+├── parquet-es-bridge/
+│   └── deployment.yaml          # Python service + 5Gi shared parquet-pvc
+│
+├── elasticsearch/ & kibana/     # Analytics stack manifests
 ```
 
 ---
@@ -134,11 +143,12 @@ This script:
 ```bash
 # After editing a manifest, just re-apply that folder
 kubectl apply -f k8s/central-station/
-kubectl apply -f k8s/kafka/
+kubectl apply -f k8s/parquet-es-bridge/
 
 # After rebuilding an image
 eval $(minikube docker-env)
 docker build -t central-station:latest ./central-station
+docker build -t parquet-es-bridge:latest ./parquet-es-bridge
 kubectl rollout restart deployment/central-station -n weather
 ```
 
@@ -152,6 +162,10 @@ Minikube does not assign real external IPs. Use the `minikube service` command t
 # Central Station HTTP API
 minikube service central-station -n weather --url
 # → e.g. http://192.168.49.2:31451
+
+# Kibana
+minikube service kibana -n weather --url
+# → e.g. http://192.168.49.2:32080
 
 # Kafka UI
 minikube service kafka-ui -n weather --url
@@ -474,9 +488,10 @@ kubectl exec -n weather deploy/weather-station-1 -- nslookup kafka.weather.svc.c
 # Should return: Address: 10.x.x.x (the ClusterIP)
 ```
 
-### Minikube runs out of memory
+### Minikube runs out of memory or pods crash with OOMKilled
+The analytics stack (Elasticsearch) is very memory heavy. You must allocate enough resources:
 ```bash
-# Stop and restart with more resources
+# Stop and restart with 10 CPUs and 8GB RAM
 minikube stop
-minikube start --memory=4096 --cpus=4
+minikube start --cpus=10 --memory=8192
 ```
