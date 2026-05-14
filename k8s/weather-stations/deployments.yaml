@@ -30,7 +30,7 @@ spec:
       containers:
         - name: weather-station
           image: weather-station-mock:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           envFrom:
             - configMapRef:
                 name: weather-station-mock-config
@@ -69,7 +69,7 @@ spec:
       containers:
         - name: weather-station
           image: weather-station-mock:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           envFrom:
             - configMapRef:
                 name: weather-station-mock-config
@@ -108,7 +108,7 @@ spec:
       containers:
         - name: weather-station
           image: weather-station-mock:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           envFrom:
             - configMapRef:
                 name: weather-station-mock-config
@@ -147,7 +147,7 @@ spec:
       containers:
         - name: weather-station
           image: weather-station-mock:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           envFrom:
             - configMapRef:
                 name: weather-station-mock-config
@@ -186,7 +186,7 @@ spec:
       containers:
         - name: weather-station
           image: weather-station-mock:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           envFrom:
             - configMapRef:
                 name: weather-station-mock-config
@@ -225,7 +225,7 @@ spec:
       containers:
         - name: weather-station
           image: weather-station-mock:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           envFrom:
             - configMapRef:
                 name: weather-station-mock-config
@@ -264,7 +264,7 @@ spec:
       containers:
         - name: weather-station
           image: weather-station-mock:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           envFrom:
             - configMapRef:
                 name: weather-station-mock-config
@@ -303,7 +303,7 @@ spec:
       containers:
         - name: weather-station
           image: weather-station-mock:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           envFrom:
             - configMapRef:
                 name: weather-station-mock-config
@@ -342,7 +342,7 @@ spec:
       containers:
         - name: weather-station
           image: weather-station-mock:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           envFrom:
             - configMapRef:
                 name: weather-station-mock-config
@@ -381,7 +381,7 @@ spec:
       containers:
         - name: weather-station
           image: weather-station-mock:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           envFrom:
             - configMapRef:
                 name: weather-station-mock-config

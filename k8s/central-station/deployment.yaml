@@ -20,7 +20,7 @@ spec:
       containers:
         - name: central-station
           image: central-station:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           ports:
             - name: http
               containerPort: 8080
@@ -28,11 +28,11 @@ spec:
             - configMapRef:
                 name: central-station-config
           volumeMounts:
-            - name: data
-              mountPath: /data
+            - name: bitcask-data
+              mountPath: /data/bitcask
+            - name: parquet-data
+              mountPath: /data/parquet
           readinessProbe:
-            # Spring Boot Actuator health endpoint.
-            # The pod won't receive traffic until Kafka consumer is connected.
             httpGet:
               path: /actuator/health
               port: 8080
@@ -53,6 +53,9 @@ spec:
               memory: "1Gi"
               cpu: "1000m"
       volumes:
-        - name: data
+        - name: bitcask-data
           persistentVolumeClaim:
-            claimName: central-station-pvc
+            claimName: bitcask-pvc
+        - name: parquet-data
+          persistentVolumeClaim:
+            claimName: parquet-pvc

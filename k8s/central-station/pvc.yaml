@@ -1,13 +1,13 @@
+# Bitcask-only PVC for the central-station.
+# Parquet files are stored on the shared parquet-pvc instead.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: central-station-pvc
+  name: bitcask-pvc
   namespace: weather
 spec:
-  # Minikube auto-provisions this via its default StorageClass.
-  # Stores both Bitcask and Parquet data under /data inside the container.
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
+      storage: 2Gi

@@ -1,0 +1,59 @@
+# Shared Parquet PVC — mounted by both central-station and parquet-es-bridge.
+# On Minikube (single node), ReadWriteOnce can be shared across pods on the same node.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: parquet-pvc
+  namespace: weather
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: parquet-es-bridge
+  namespace: weather
+  labels:
+    app: parquet-es-bridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: parquet-es-bridge
+  template:
+    metadata:
+      labels:
+        app: parquet-es-bridge
+    spec:
+      containers:
+        - name: parquet-es-bridge
+          image: parquet-es-bridge:latest
+          imagePullPolicy: Never
+          env:
+            - name: PARQUET_DIR
+              value: "/data/parquet"
+            - name: ES_HOST
+              value: "http://elasticsearch.weather.svc.cluster.local:9200"
+            - name: ES_INDEX
+              value: "weather-telemetry"
+            - name: POLL_INTERVAL
+              value: "30"
+          volumeMounts:
+            - name: parquet-data
+              mountPath: /data/parquet
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "300m"
+      volumes:
+        - name: parquet-data
+          persistentVolumeClaim:
+            claimName: parquet-pvc
