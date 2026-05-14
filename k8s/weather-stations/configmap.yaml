@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: weather-station-mock-config
+  namespace: weather
+data:
+  # Shared config for all random-mode stations.
+  # STATION_ID is set per-Deployment below so each pod is uniquely identified.
+  KAFKA_BROKER: "kafka.weather.svc.cluster.local:9092"
+  TOPIC_NAME: "weather.telemetry.v1"
+  MODE: "random"

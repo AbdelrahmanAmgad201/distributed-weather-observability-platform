@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: central-station-pvc
+  namespace: weather
+spec:
+  # Minikube auto-provisions this via its default StorageClass.
+  # Stores both Bitcask and Parquet data under /data inside the container.
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
