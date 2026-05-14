@@ -1,7 +1,7 @@
 services:
 
   # -------------------------
-  # KAFKA
+  # KAFKA (KRaft, single-node)
   # -------------------------
   kafka:
     image: apache/kafka:latest
@@ -20,9 +20,19 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     networks:
       - app-net
 
+  # -------------------------
+  # KAFKA UI
+  # -------------------------
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
@@ -32,7 +42,8 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     networks:
       - app-net
 
@@ -48,6 +59,12 @@ services:
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
     ports:
       - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9200/_cluster/health | grep -qv '\"status\":\"red\"'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
     networks:
       - app-net
 
@@ -55,7 +72,8 @@ services:
     image: docker.elastic.co/kibana/kibana:9.4.0
     container_name: kib01
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
     environment:
       ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
     ports:
@@ -64,7 +82,7 @@ services:
       - app-net
 
   # -------------------------
-  # WEATHER STATIONS (PRODUCERS)
+  # WEATHER STATIONS — RANDOM (1-5)
   # -------------------------
   weather-station-1:
     build: ./weather-station-mock
@@ -73,8 +91,12 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=1
+    depends_on:
+      kafka:
+        condition: service_healthy
     networks:
       - app-net
+    restart: on-failure
 
   weather-station-2:
     build: ./weather-station-mock
@@ -83,8 +105,12 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=2
+    depends_on:
+      kafka:
+        condition: service_healthy
     networks:
       - app-net
+    restart: on-failure
 
   weather-station-3:
     build: ./weather-station-mock
@@ -93,8 +119,12 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=3
+    depends_on:
+      kafka:
+        condition: service_healthy
     networks:
       - app-net
+    restart: on-failure
 
   weather-station-4:
     build: ./weather-station-mock
@@ -103,8 +133,12 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=4
+    depends_on:
+      kafka:
+        condition: service_healthy
     networks:
       - app-net
+    restart: on-failure
 
   weather-station-5:
     build: ./weather-station-mock
@@ -113,71 +147,88 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=5
+    depends_on:
+      kafka:
+        condition: service_healthy
     networks:
       - app-net
+    restart: on-failure
 
+  # -------------------------
+  # WEATHER STATIONS — OPEN-METEO (6-10)
+  # -------------------------
   weather-station-6:
-    build: ./weather-station-mock
-    environment:
-      - MODE=random
-      - KAFKA_BROKER=kafka:29092
-      - TOPIC_NAME=weather.telemetry.v1
-      - STATION_ID=6
-    networks:
-      - app-net
-
-  weather-station-7:
-    build: ./weather-station-mock
-    environment:
-      - MODE=random
-      - KAFKA_BROKER=kafka:29092
-      - TOPIC_NAME=weather.telemetry.v1
-      - STATION_ID=7
-    networks:
-      - app-net
-
-  weather-station-8:
-    build: ./weather-station-mock
-    environment:
-      - MODE=random
-      - KAFKA_BROKER=kafka:29092
-      - TOPIC_NAME=weather.telemetry.v1
-      - STATION_ID=8
-    networks:
-      - app-net
-
-  weather-station-9:
-    build: ./weather-station-mock
-    environment:
-      - MODE=random
-      - KAFKA_BROKER=kafka:29092
-      - TOPIC_NAME=weather.telemetry.v1
-      - STATION_ID=9
-    networks:
-      - app-net
-
-  weather-station-10:
-    build: ./weather-station-mock
-    environment:
-      - MODE=random
-      - KAFKA_BROKER=kafka:29092
-      - TOPIC_NAME=weather.telemetry.v1
-      - STATION_ID=10
-    networks:
-      - app-net
-
-  weather-station-11:
     build: ./weather-station-mock
     environment:
       - MODE=open-meteo
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
-      - STATION_ID=11
+      - STATION_ID=6
+    depends_on:
+      kafka:
+        condition: service_healthy
     networks:
       - app-net
+    restart: on-failure
+
+  weather-station-7:
+    build: ./weather-station-mock
+    environment:
+      - MODE=open-meteo
+      - KAFKA_BROKER=kafka:29092
+      - TOPIC_NAME=weather.telemetry.v1
+      - STATION_ID=7
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - app-net
+    restart: on-failure
+
+  weather-station-8:
+    build: ./weather-station-mock
+    environment:
+      - MODE=open-meteo
+      - KAFKA_BROKER=kafka:29092
+      - TOPIC_NAME=weather.telemetry.v1
+      - STATION_ID=8
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - app-net
+    restart: on-failure
+
+  weather-station-9:
+    build: ./weather-station-mock
+    environment:
+      - MODE=open-meteo
+      - KAFKA_BROKER=kafka:29092
+      - TOPIC_NAME=weather.telemetry.v1
+      - STATION_ID=9
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - app-net
+    restart: on-failure
+
+  weather-station-10:
+    build: ./weather-station-mock
+    environment:
+      - MODE=open-meteo
+      - KAFKA_BROKER=kafka:29092
+      - TOPIC_NAME=weather.telemetry.v1
+      - STATION_ID=10
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - app-net
+    restart: on-failure
 
   # -------------------------
-  # CENTRAL PROCESSING 
+  # CENTRAL PROCESSING
   # -------------------------
   central-station:
     build: ./central-station
@@ -189,13 +240,34 @@ services:
       - APP_TOPIC_ALERTS=weather.alerts.rain.v1
       - BITCASK_DATA_PATH=/data/bitcask
       - PARQUET_DATA_PATH=/data/parquet
+      - ARCHIVER_FLUSH_INTERVAL_MS=30000
     volumes:
       - bitcask_data:/data/bitcask
       - parquet_data:/data/parquet
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     networks:
       - app-net
+    restart: on-failure
+
+  # -------------------------
+  # PARQUET → ELASTICSEARCH BRIDGE
+  # -------------------------
+  parquet-es-bridge:
+    build: ./parquet-es-bridge
+    environment:
+      - PARQUET_DIR=/data/parquet
+      - ES_HOST=http://elasticsearch:9200
+      - ES_INDEX=weather-telemetry
+    volumes:
+      - parquet_data:/data/parquet
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - app-net
+    restart: on-failure
 
 volumes:
   bitcask_data:
