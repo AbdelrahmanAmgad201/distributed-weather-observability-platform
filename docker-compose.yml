@@ -144,7 +144,7 @@ services:
     #   kafka:
     #     condition: service_healthy
     
-    weather-station-11:
+  weather-station-11:
     build: ./weather-station-mock
     environment:
       - MODE=open-meteo
