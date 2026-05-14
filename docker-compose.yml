@@ -1,4 +1,8 @@
 services:
+
+  # -------------------------
+  # KAFKA
+  # -------------------------
   kafka:
     image: apache/kafka:latest
     container_name: kafka
@@ -11,29 +15,57 @@ services:
       KAFKA_LISTENERS: 'INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093'
       KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://kafka:29092,EXTERNAL://localhost:9092'
       KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:9093'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-    # healthcheck:
-    #   test: ["CMD", "kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
-    #   interval: 10s
-    #   timeout: 10s
-    #   retries: 10
-    #   start_period: 20s
+    networks:
+      - app-net
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
     ports:
       - "8080:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
-    # depends_on:
-    #   kafka:
-    #     condition: service_healthy
+    depends_on:
+      - kafka
+    networks:
+      - app-net
 
+  # -------------------------
+  # ELASTIC STACK
+  # -------------------------
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.4.0
+    container_name: es01
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9200:9200"
+    networks:
+      - app-net
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.4.0
+    container_name: kib01
+    depends_on:
+      - elasticsearch
+    environment:
+      ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
+    ports:
+      - "5601:5601"
+    networks:
+      - app-net
+
+  # -------------------------
+  # WEATHER STATIONS (PRODUCERS)
+  # -------------------------
   weather-station-1:
     build: ./weather-station-mock
     environment:
@@ -41,9 +73,8 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=1
-    # depends_on:
-    #   kafka:
-    #     condition: service_healthy
+    networks:
+      - app-net
 
   weather-station-2:
     build: ./weather-station-mock
@@ -52,9 +83,8 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=2
-    # depends_on:
-    #   kafka:
-    #     condition: service_healthy
+    networks:
+      - app-net
 
   weather-station-3:
     build: ./weather-station-mock
@@ -63,9 +93,8 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=3
-    # depends_on:
-    #   kafka:
-    #     condition: service_healthy
+    networks:
+      - app-net
 
   weather-station-4:
     build: ./weather-station-mock
@@ -74,9 +103,8 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=4
-    # depends_on:
-    #   kafka:
-    #     condition: service_healthy
+    networks:
+      - app-net
 
   weather-station-5:
     build: ./weather-station-mock
@@ -85,9 +113,8 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=5
-    # depends_on:
-    #   kafka:
-    #     condition: service_healthy
+    networks:
+      - app-net
 
   weather-station-6:
     build: ./weather-station-mock
@@ -96,9 +123,8 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=6
-    # depends_on:
-    #   kafka:
-    #     condition: service_healthy
+    networks:
+      - app-net
 
   weather-station-7:
     build: ./weather-station-mock
@@ -107,9 +133,8 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=7
-    # depends_on:
-    #   kafka:
-    #     condition: service_healthy
+    networks:
+      - app-net
 
   weather-station-8:
     build: ./weather-station-mock
@@ -118,9 +143,8 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=8
-    # depends_on:
-    #   kafka:
-    #     condition: service_healthy
+    networks:
+      - app-net
 
   weather-station-9:
     build: ./weather-station-mock
@@ -129,9 +153,8 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=9
-    # depends_on:
-    #   kafka:
-    #     condition: service_healthy
+    networks:
+      - app-net
 
   weather-station-10:
     build: ./weather-station-mock
@@ -140,10 +163,9 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=10
-    # depends_on:
-    #   kafka:
-    #     condition: service_healthy
-    
+    networks:
+      - app-net
+
   weather-station-11:
     build: ./weather-station-mock
     environment:
@@ -151,10 +173,12 @@ services:
       - KAFKA_BROKER=kafka:29092
       - TOPIC_NAME=weather.telemetry.v1
       - STATION_ID=11
-    # depends_on:
-    #   kafka:
-    #     condition: service_healthy
+    networks:
+      - app-net
 
+  # -------------------------
+  # CENTRAL PROCESSING 
+  # -------------------------
   central-station:
     build: ./central-station
     ports:
@@ -168,10 +192,15 @@ services:
     volumes:
       - bitcask_data:/data/bitcask
       - parquet_data:/data/parquet
-    # depends_on:
-    #   kafka:
-    #     condition: service_healthy
+    depends_on:
+      - kafka
+    networks:
+      - app-net
 
 volumes:
   bitcask_data:
   parquet_data:
+
+networks:
+  app-net:
+    driver: bridge
